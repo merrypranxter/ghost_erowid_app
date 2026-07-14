@@ -282,8 +282,15 @@ export class Wallpaper {
     this.current = null;
     this.t0 = performance.now();
     this._frame = 0;
+    this.bgColor = "#000";
 
     const gl = this.gl;
+    if (!gl) {
+      // no WebGL: the OS still runs, just on a flat --bg wallpaper
+      console.error("[GHOST//OS] WebGL context could not be initialized — wallpaper disabled.");
+      glCanvas.hidden = true;
+      return;
+    }
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
@@ -330,6 +337,7 @@ export class Wallpaper {
   use(name) { this.current = this.programs[name] ? name : this.current; }
 
   setAscii(on) {
+    if (!this.gl) return;
     this.asciiMode = on;
     this.asciiCanvas.hidden = !on;
     this.canvas.style.visibility = on ? "hidden" : "visible";
@@ -380,8 +388,7 @@ export class Wallpaper {
     gl.readPixels(0, 0, cols, rows, gl.RGBA, gl.UNSIGNED_BYTE, this.pixels);
     const w = window.innerWidth, h = window.innerHeight;
     const cw = w / cols, ch = h / rows;
-    const bg = getComputedStyle(document.body).getPropertyValue("--bg").trim() || "#000";
-    ctx2d.fillStyle = bg;
+    ctx2d.fillStyle = this.bgColor || "#000";
     ctx2d.fillRect(0, 0, w, h);
     ctx2d.font = `${Math.ceil(ch)}px monospace`;
     ctx2d.textBaseline = "top";

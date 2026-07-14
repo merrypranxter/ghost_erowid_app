@@ -75,6 +75,8 @@ export async function runBoot(els, sound, onDone) {
   log.scrollTop = log.scrollHeight;
   await sleep(450);
 
+  boot.removeEventListener("click", skip);
+  window.removeEventListener("keydown", skip);
   sound.pop();
   onDone();
 }

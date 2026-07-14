@@ -212,7 +212,7 @@ export function terminalApp(os) {
   root.append(out, inWrap);
 
   const print = (text, cls = "") =>
-    (out.innerHTML += cls ? `<span class="${cls}">${text}</span>\n` : `${text}\n`);
+    out.insertAdjacentHTML("beforeend", cls ? `<span class="${cls}">${text}</span>\n` : `${text}\n`);
   const scroll = () => (out.scrollTop = out.scrollHeight);
 
   print(esc(LOGO), "sys");
@@ -296,8 +296,8 @@ export function terminalApp(os) {
   const history = [];
   let hi = 0;
   input.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowUp") { hi = Math.max(0, hi - 1); input.value = history[hi] || ""; return; }
-    if (e.key === "ArrowDown") { hi = Math.min(history.length, hi + 1); input.value = history[hi] || ""; return; }
+    if (e.key === "ArrowUp") { e.preventDefault(); hi = Math.max(0, hi - 1); input.value = history[hi] || ""; return; }
+    if (e.key === "ArrowDown") { e.preventDefault(); hi = Math.min(history.length, hi + 1); input.value = history[hi] || ""; return; }
     if (e.key !== "Enter") return;
     const raw = input.value.trim();
     input.value = "";

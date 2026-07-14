@@ -86,6 +86,13 @@ const os = {
     document.body.classList.remove(...Object.values(LAYERS).map((x) => x.cls));
     document.body.classList.add(L.cls);
     this.wallpaper.use(L.shader);
+    // cache --bg for the ASCII renderer (avoids getComputedStyle every frame);
+    // re-read after the 600ms body background transition settles
+    const cacheBg = () => {
+      this.wallpaper.bgColor = getComputedStyle(document.body).getPropertyValue("--bg").trim() || "#000";
+    };
+    cacheBg();
+    setTimeout(cacheBg, 700);
     document.getElementById("layer-name").textContent = L.name;
     document.getElementById("statusline").textContent = L.status;
     if (prev !== id && !silent) {

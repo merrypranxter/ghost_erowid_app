@@ -397,6 +397,7 @@ body.layer-bios .crt { opacity: 0.35; }
   cursor: grab;
   user-select: none;
   text-transform: uppercase;
+  touch-action: none;
 }
 .win-title:active { cursor: grabbing; }
 .win-title .t { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-shadow: 0 0 6px rgba(255,255,255,0.25); }
@@ -436,6 +437,7 @@ body.layer-bios .crt { opacity: 0.35; }
   line-height: 18px;
   text-align: center;
   user-select: none;
+  touch-action: none;
 }
 
 /* ------------------------------------------------------------
