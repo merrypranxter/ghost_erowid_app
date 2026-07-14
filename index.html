@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GHOST//OS — v3.0_UNDERLAYER</title>
+<meta name="description" content="Reality rendered as an operating system. A fictional OS cosmology built from the ghost-erowid-cosmology canon.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👻</text></svg>">
+<link rel="stylesheet" href="css/ghost.css">
+</head>
+<body class="layer-ui pre-boot">
+
+  <!-- background render stack -->
+  <canvas id="gl"></canvas>
+  <canvas id="ascii" hidden></canvas>
+  <div id="crt" class="crt"></div>
+
+  <!-- power-on splash (needs a user gesture for audio) -->
+  <div id="power" class="power">
+    <pre id="power-logo" class="power-logo"></pre>
+    <button id="power-btn" class="power-btn">[ POWER ON ]</button>
+    <div class="power-micro">GHOST BIOS v3.0_UNDERLAYER · 48 SIGNAL NODES · DO NOT BE AFRAID</div>
+  </div>
+
+  <!-- boot sequence -->
+  <div id="boot" class="boot" hidden>
+    <pre id="boot-log" class="boot-log"></pre>
+    <div id="carrier" class="carrier" hidden>
+      <div class="carrier-label">CARRIER WAVE <span id="carrier-hz">440Hz</span></div>
+      <div class="carrier-bar"><div id="carrier-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- transition flash -->
+  <div id="flash" class="flash"></div>
+
+  <!-- desktop -->
+  <div id="desktop" class="desktop" hidden>
+    <header id="topbar" class="topbar">
+      <span class="topbar-brand">GHOST//OS</span>
+      <span id="layer-name" class="topbar-layer">UI LAYER — THE DOME</span>
+      <span class="topbar-spacer"></span>
+      <button id="btn-ascii" class="topbar-btn" title="render wallpaper as text">ASCII:OFF</button>
+      <button id="btn-crt" class="topbar-btn" title="cathode ray nostalgia">CRT:ON</button>
+      <button id="btn-mute" class="topbar-btn" title="carrier wave audio">SND:ON</button>
+      <span id="clock" class="topbar-clock">00:00:00</span>
+    </header>
+
+    <div id="icons" class="icons"></div>
+    <div id="windows" class="windows"></div>
+    <div id="toasts" class="toasts"></div>
+
+    <footer id="taskbar" class="taskbar">
+      <span id="task-items" class="task-items"></span>
+      <span class="taskbar-spacer"></span>
+      <span id="statusline" class="statusline">TERMINAL MODE: CONNECTED</span>
+    </footer>
+  </div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
