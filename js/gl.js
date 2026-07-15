@@ -1,409 +1,412 @@
-// GHOST//OS — wallpaper engine
-// Fragment shaders ported from ghost-erowid-cosmology/shaders/*.glsl
-// One shader per cosmological layer (docs/COSMOLOGICAL_LAYERS.yaml).
+// GHOST EROWID COSMOLOGY — content-specific WebGL environments.
+// Each family has its own visual grammar. These are not interchangeable skins:
+// the shader behavior is part of the interpretation of the archive.
 
-const VERT = `
-attribute vec2 a_pos;
-void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }
+const VERTEX = `
+attribute vec2 a_position;
+void main() { gl_Position = vec4(a_position, 0.0, 1.0); }
 `;
 
 const HEADER = `
 precision highp float;
 uniform float u_time;
 uniform vec2 u_resolution;
-#define PI 3.14159265359
+uniform vec2 u_pointer;
+uniform float u_intensity;
+#define PI 3.141592653589793
+
+float hash21(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+mat2 rot(float a) {
+  float s = sin(a), c = cos(a);
+  return mat2(c, -s, s, c);
+}
+
+vec3 spectrum(float t) {
+  return 0.52 + 0.48 * cos(6.28318 * (t + vec3(0.0, 0.31, 0.67)));
+}
 `;
 
-// --- UI LAYER — shaders/chrysanthemum_gateway.glsl (12-fold hyperbolic tiling)
-//     with a faint shaders/hex_substrate.glsl floor mixed in
-const FRAG_CHRYSANTHEMUM = HEADER + `
-vec2 hex_uv(vec2 uv) {
-  vec2 r = vec2(1.0, 1.73205080757);
-  vec2 h = r * 0.5;
-  vec2 a = mod(uv, r) - h;
-  vec2 b = mod(uv - h, r) - h;
-  return (length(a) < length(b)) ? a : b;
-}
+const DMT = HEADER + `
 void main() {
-  vec2 uv = (gl_FragCoord.xy * 2.0 - u_resolution.xy) / min(u_resolution.x, u_resolution.y);
-  vec3 magenta = vec3(1.0, 0.18, 0.92);   // #FF2EEA
-  vec3 jade    = vec3(0.0, 1.0, 0.5);     // #00FF7F
-  vec3 gold    = vec3(1.0, 0.83, 0.0);    // #FFD400
-  vec3 cyan    = vec3(0.0, 0.9, 1.0);     // #00E5FF
-  vec3 base    = vec3(0.043, 0.063, 0.125); // #0B1020
+  vec2 p = (2.0 * gl_FragCoord.xy - u_resolution.xy) / min(u_resolution.x, u_resolution.y);
+  p += (u_pointer - 0.5) * 0.13;
+  float originalRadius = length(p);
+  float angle = atan(p.y, p.x);
+  float sector = PI / 6.0;
+  angle = abs(mod(angle + sector * 0.5, sector) - sector * 0.5);
+  p = vec2(cos(angle), sin(angle)) * originalRadius;
 
-  float r = length(uv);
-  float theta = atan(uv.y, uv.x);
+  float depth = 1.0 / max(0.09, originalRadius);
+  vec2 jeweled = p * depth * (5.0 + u_intensity * 2.0);
+  jeweled *= rot(u_time * 0.08);
+  float syntax = abs(sin(jeweled.x * 2.4 + sin(jeweled.y * 1.7 + u_time * 1.9)));
+  float lattice = smoothstep(0.16, 0.0, abs(fract(jeweled.x + jeweled.y) - 0.5));
+  float eyes = smoothstep(0.13, 0.0, abs(length(fract(jeweled) - 0.5) - 0.22));
+  float tunnel = pow(max(0.0, 1.0 - originalRadius * 0.62), 2.2);
+  float pulse = 0.65 + 0.35 * sin(depth * 3.0 - u_time * 3.3);
 
-  float petals = 12.0;
-  float petal_angle = mod(theta + u_time * 0.05, 2.0 * PI / petals);
-  float hyperbolic = exp(-r * 1.35);
-  float petal_shape = sin(petal_angle * petals * 0.5) * hyperbolic;
+  vec3 blackJewel = vec3(0.008, 0.002, 0.025);
+  vec3 color = blackJewel;
+  color += spectrum(syntax * 0.35 + u_time * 0.025) * syntax * tunnel * 1.35;
+  color += vec3(0.0, 1.0, 0.78) * lattice * 0.48 * u_intensity;
+  color += vec3(1.0, 0.10, 0.74) * eyes * pulse * 0.58;
+  color += vec3(1.0, 0.77, 0.03) * pow(tunnel, 4.0) * pulse;
+  color *= 1.0 - smoothstep(0.55, 1.7, originalRadius) * 0.72;
+  gl_FragColor = vec4(pow(max(color, 0.0), vec3(0.82)), 1.0);
+}
+`;
 
-  float rotation = u_time * 0.3;
-  float layer1 = sin(theta * 6.0 + rotation) * hyperbolic;
-  float layer2 = sin(theta * 12.0 - rotation * 1.5) * hyperbolic * 0.5;
+const LSD = HEADER + `
+void main() {
+  vec2 p = (2.0 * gl_FragCoord.xy - u_resolution.xy) / min(u_resolution.x, u_resolution.y);
+  vec2 cursor = (u_pointer - 0.5) * 0.12;
+  p += cursor;
+  float a = atan(p.y, p.x);
+  float r = length(p);
+  float wedge = PI / 3.0;
+  a = abs(mod(a + wedge * 0.5, wedge) - wedge * 0.5);
+  p = vec2(cos(a), sin(a)) * r;
 
-  float tunnel = smoothstep(0.12, 0.0, r);
+  float breathing = 0.98 + 0.025 * sin(u_time * 0.7);
+  vec2 z = p * (1.45 / breathing);
+  vec2 c = vec2(-0.745, 0.113) + 0.035 * vec2(cos(u_time * 0.11), sin(u_time * 0.13));
+  float escaped = 0.0;
+  float orbit = 0.0;
+  for (int i = 0; i < 44; i++) {
+    z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
+    orbit += exp(-abs(length(z) - 0.72) * 7.0);
+    if (dot(z, z) > 7.0 && escaped == 0.0) escaped = float(i);
+  }
+  float iter = escaped / 44.0;
+  float crystal = sin(orbit * 0.13 + r * 24.0 - u_time * 0.6) * 0.5 + 0.5;
+  float tracers = smoothstep(0.12, 0.0, abs(fract(a * 8.0 / PI + u_time * 0.03) - 0.5));
+  vec3 color = spectrum(iter * 1.7 + crystal * 0.14 + u_time * 0.018);
+  color *= 0.15 + pow(crystal, 2.1) * 0.95;
+  color += vec3(0.0, 0.85, 1.0) * tracers * (1.0 - r) * 0.34;
+  color.r += smoothstep(0.4, 0.0, abs(sin(orbit * 0.11 + 0.12))) * 0.2;
+  color.b += smoothstep(0.4, 0.0, abs(sin(orbit * 0.11 - 0.12))) * 0.2;
+  color *= 1.0 - smoothstep(0.45, 1.55, r) * 0.62;
+  gl_FragColor = vec4(pow(max(color, 0.0), vec3(0.86)), 1.0);
+}
+`;
 
-  vec3 color = base;
-  color += mix(magenta, jade, petal_shape + 0.5) * hyperbolic * 1.15;
-  color += gold * layer1 * 0.45;
-  color += jade * layer2 * 0.3;
-  color += cyan * tunnel * (0.6 + 0.4 * sin(u_time * 2.0));
+const SALVIA = HEADER + `
+float gear(vec2 p, float teeth, float radius, float phase) {
+  float a = atan(p.y, p.x) + phase;
+  float r = length(p);
+  float edge = radius + 0.055 * sign(sin(a * teeth));
+  return smoothstep(0.028, 0.0, abs(r - edge));
+}
 
-  // caustic refraction ripples
-  float caustic = sin(r * 50.0 - u_time * 5.0) * 0.5 + 0.5;
-  color += gold * caustic * hyperbolic * 0.22;
+void main() {
+  vec2 p = (2.0 * gl_FragCoord.xy - u_resolution.xy) / min(u_resolution.x, u_resolution.y);
+  p.x += 0.15 * sin(floor(p.y * 8.0) + u_time * 0.5);
+  float seam = abs(p.x - 0.15 * sin(p.y * 3.0 + u_time * 0.33));
+  float zipper = smoothstep(0.035, 0.0, seam);
+  float wheel = gear(p * 0.92, 24.0, 0.55, u_time * 0.27);
+  wheel += gear((p - vec2(-0.63, 0.32)) * 1.4, 16.0, 0.32, -u_time * 0.42);
+  wheel += gear((p - vec2(0.67, -0.37)) * 1.5, 12.0, 0.31, u_time * 0.55);
+  float spokes = smoothstep(0.055, 0.0, abs(sin(atan(p.y, p.x) * 8.0 + u_time * 0.25)))
+    * step(0.17, length(p)) * step(length(p), 0.55);
+  float belt = step(abs(p.y + 0.73), 0.14);
+  float slats = step(0.53, fract(p.x * 4.0 - u_time * 0.68));
+  float page = step(0.94, fract((p.y + p.x * 0.18) * 7.0 + u_time * 0.12));
 
-  // faint hex substrate — "the honeycomb grid of reality"
-  vec2 hx = hex_uv(uv * 9.0 + vec2(0.0, u_time * 0.15));
-  float hexline = smoothstep(0.06, 0.0, abs(length(hx) - 0.42));
-  color += cyan * hexline * 0.10 * (1.0 - hyperbolic);
-
-  // chromatic vignette
-  color *= 1.0 - r * 0.28;
+  vec3 grease = vec3(0.026, 0.027, 0.018);
+  vec3 copper = vec3(0.66, 0.31, 0.10);
+  vec3 verdigris = vec3(0.10, 0.58, 0.53);
+  vec3 warning = vec3(1.0, 0.18, 0.0);
+  vec3 color = grease;
+  color += copper * wheel * 1.2;
+  color += verdigris * spokes * 0.76;
+  color = mix(color, mix(copper * 0.35, grease * 2.0, slats), belt);
+  color += warning * zipper * (0.45 + 0.55 * sin(u_time * 7.0));
+  color += vec3(0.42, 0.48, 0.14) * page * 0.16;
+  float dust = step(0.993, hash21(floor((p + u_time * 0.015) * 95.0)));
+  color += vec3(0.9, 0.78, 0.48) * dust * 0.36;
+  color *= 1.0 - smoothstep(0.5, 1.55, length(p)) * 0.7;
   gl_FragColor = vec4(color, 1.0);
 }
 `;
 
-// --- DATABASE LAYER — shaders/akashic_grid.glsl (neon web database)
-const FRAG_AKASHIC = HEADER + `
-vec2 hash2(vec2 p) {
-  return fract(sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) * 43758.5453);
-}
+const DXM = HEADER + `
 void main() {
   vec2 uv = gl_FragCoord.xy / u_resolution.xy;
-  uv.x *= u_resolution.x / u_resolution.y;
+  float tick = floor(u_time * (2.2 + u_intensity * 1.8)) / (2.2 + u_intensity * 1.8);
+  vec2 blocks = floor(uv * vec2(72.0, 42.0)) / vec2(72.0, 42.0);
+  vec2 displaced = blocks;
+  displaced.x += 0.045 * sin(floor(blocks.y * 13.0) + tick * 0.7);
+  displaced.y += 0.018 * sin(floor(blocks.x * 9.0) - tick * 0.43);
+  float horizon = smoothstep(0.08, 0.0, abs(displaced.y - 0.54));
+  float chamber = abs(sin((displaced.x - 0.5) * 9.0 / max(0.18, displaced.y)));
+  chamber = smoothstep(0.93, 1.0, chamber);
+  float avatarLag = smoothstep(0.12, 0.0, length(displaced - u_pointer));
+  float echo = smoothstep(0.16, 0.0, length(displaced - u_pointer - vec2(0.09, -0.035)));
+  float drop = step(0.987, hash21(vec2(floor(uv.y * 60.0), tick)));
 
-  vec3 electric_blue  = vec3(0.0, 1.0, 1.0);    // #00FFFF
-  vec3 database_amber = vec3(1.0, 0.75, 0.0);   // #FFBF00
-  vec3 cold_steel     = vec3(0.69, 0.77, 0.87); // #B0C4DE
-
-  float density = 9.0;
-  vec2 grid_uv = uv * density + vec2(u_time * 0.05, 0.0);
-  vec2 grid_cell = floor(grid_uv);
-  vec2 grid_frac = fract(grid_uv);
-  vec2 node_pos = hash2(grid_cell);
-  float dist_to_node = length(grid_frac - node_pos);
-
-  float line = 0.0;
-  for (int x = -1; x <= 1; x++) {
-    for (int y = -1; y <= 1; y++) {
-      vec2 ncell = grid_cell + vec2(float(x), float(y));
-      vec2 npos = hash2(ncell);
-      vec2 a = node_pos;
-      vec2 b = npos + vec2(float(x), float(y));
-      vec2 pa = grid_frac - a;
-      vec2 ba = b - a;
-      float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
-      float d = length(pa - ba * h);
-      float connection = smoothstep(0.02, 0.0, d);
-      float active = step(0.55, hash2(ncell).x);
-      line += connection * active;
-    }
-  }
-
-  float node_glow = smoothstep(0.08, 0.0, dist_to_node);
-  float data_pulse = mod(u_time * 3.0 - uv.y * 14.0, 1.0);
-  float pulse_glow = smoothstep(0.14, 0.0, abs(data_pulse - 0.5)) * line;
-
-  vec3 color = vec3(0.04, 0.04, 0.11); // #1A1A2E-ish base
-  color += electric_blue * line * 0.35;
-  color += database_amber * pulse_glow * 0.9;
-  color += electric_blue * node_glow * 1.6;
-  color += cold_steel * 0.05;
-
-  float fog = 1.0 - length(uv - vec2(0.85, 0.5)) * 0.45;
-  color *= fog;
+  vec3 color = vec3(0.012, 0.018, 0.052);
+  color += vec3(0.15, 0.25, 0.58) * chamber * 0.7;
+  color += vec3(0.72, 0.82, 1.0) * horizon * 0.38;
+  color += vec3(1.0, 0.18, 0.58) * echo * 0.18;
+  color += vec3(0.15, 0.55, 1.0) * avatarLag * 0.22;
+  color += vec3(0.45, 0.55, 0.8) * drop * 0.14;
+  color *= 0.82 + 0.18 * step(0.5, hash21(vec2(tick, floor(uv.y * 7.0))));
+  color *= 1.0 - length(uv - 0.5) * 0.74;
   gl_FragColor = vec4(color, 1.0);
 }
 `;
 
-// --- KERNEL LAYER — after shaders/salvia_mechanical.glsl
-//     The Wheel (r = r0 + a*cos(n*theta)) + conveyor belt cylindrical tiling
-const FRAG_MECHANICAL = HEADER + `
-float hash(vec2 p) { return fract(sin(dot(p, vec2(41.3, 289.1))) * 45758.5453); }
-void main() {
-  vec2 uv = (gl_FragCoord.xy * 2.0 - u_resolution.xy) / min(u_resolution.x, u_resolution.y);
-
-  vec3 copper  = vec3(0.72, 0.45, 0.20);  // #B87333
-  vec3 olive   = vec3(0.29, 0.36, 0.14);  // #4A5D23
-  vec3 orange  = vec3(1.0, 0.27, 0.0);    // #FF4500 safety orange
-  vec3 teal    = vec3(0.26, 0.70, 0.68);  // #43B3AE verdigris
-  vec3 grease  = vec3(0.10, 0.10, 0.10);
-
-  vec3 color = grease;
-
-  // THE WHEEL — circular buffer visualized as gear teeth
-  float r = length(uv);
-  float theta = atan(uv.y, uv.x);
-  float spin = u_time * 0.4;
-  float teeth = 24.0;
-  float gear = 0.55 + 0.05 * sign(sin((theta + spin) * teeth));
-  float wheel = smoothstep(0.015, 0.0, abs(r - gear));
-  float hub = smoothstep(0.012, 0.0, abs(r - 0.18));
-  float spokes = smoothstep(0.03, 0.0, abs(sin((theta + spin) * 6.0))) * step(0.18, r) * step(r, gear);
-  color += copper * wheel * 1.4;
-  color += teal * hub * 1.2;
-  color += olive * spokes * 2.2;
-
-  // inner gear counter-rotating
-  float gear2 = 0.33 + 0.03 * sign(sin((theta - spin * 1.7) * 16.0));
-  color += copper * smoothstep(0.012, 0.0, abs(r - gear2)) * 0.9;
-
-  // CONVEYOR BELT — unidirectional flow, mod(time) stripes
-  float belt = step(abs(uv.y + 0.72), 0.13);
-  float stripes = step(0.5, fract(uv.x * 4.0 - u_time * 0.9));
-  color = mix(color, mix(grease * 2.0, copper * 0.7, stripes), belt);
-  color += orange * belt * smoothstep(0.02, 0.0, abs(abs(uv.y + 0.72) - 0.13)) * 2.0;
-
-  // volumetric dust motes under flat industrial fluorescents
-  vec2 guv = (uv + vec2(u_time * 0.02, u_time * 0.01)) * 90.0;
-  vec2 g = floor(guv);
-  float dust = step(0.992, hash(g)) * smoothstep(0.5, 0.0, length(fract(guv) - 0.5));
-  color += vec3(0.9, 0.85, 0.7) * dust * 0.5;
-
-  // warning light sweep
-  float sweep = smoothstep(0.4, 0.0, abs(fract(u_time * 0.11) * 2.4 - 1.2 - uv.x));
-  color += orange * sweep * 0.06;
-
-  // industrial vignette
-  color *= 1.0 - length(uv) * 0.25;
-  gl_FragColor = vec4(color, 1.0);
-}
-`;
-
-// --- BIOS LAYER — after shaders/white_light_trap.glsl
-//     Absolute chromatic nullity, overexposure, prismatic ghost edges
-const FRAG_WHITELIGHT = HEADER + `
-void main() {
-  vec2 uv = (gl_FragCoord.xy * 2.0 - u_resolution.xy) / min(u_resolution.x, u_resolution.y);
-  float r = length(uv);
-
-  // breathing overexposure — power supply idle at 7.83Hz/60
-  float breathe = 0.92 + 0.08 * sin(u_time * 0.82);
-  vec3 color = vec3(1.0) * breathe;
-
-  // faint spectral fringes at the edge of the whiteout
-  float fringe = smoothstep(0.5, 1.4, r);
-  color.r -= fringe * (0.05 + 0.03 * sin(u_time * 0.7 + r * 6.0));
-  color.g -= fringe * (0.07 + 0.03 * sin(u_time * 0.9 + r * 6.0 + 2.1));
-  color.b -= fringe * (0.04 + 0.03 * sin(u_time * 1.1 + r * 6.0 + 4.2));
-
-  // prismatic UI ghosts — barely-there ring interfaces
-  float ring = abs(sin(r * 14.0 - u_time * 0.5));
-  color -= vec3(0.02, 0.015, 0.0) * smoothstep(0.9, 1.0, ring) * fringe;
-
-  // reincarnation bait: a slightly warmer center
-  color += vec3(0.015, 0.01, 0.0) * smoothstep(0.4, 0.0, r);
-  gl_FragColor = vec4(color, 1.0);
-}
-`;
-
-// --- CRASH LAYER — shaders/deliriant_glitch.glsl (WebGL1-safe dither port)
-const FRAG_DELIRIANT = HEADER + `
-float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+const DELIRIANTS = HEADER + `
 float bayer(vec2 fc) {
-  // 4x4 Bayer matrix via arithmetic (GLSL ES 1.0 lacks dynamic mat indexing)
   vec2 p = mod(floor(fc), 4.0);
   float a = mod(p.x + p.y * 2.0, 4.0);
   float b = floor(p.x / 2.0) + floor(p.y / 2.0) * 2.0;
   return (a * 4.0 + b) / 16.0;
 }
-float sdShadowMan(vec2 uv, vec2 pos, float height) {
-  vec2 local = uv - pos;
-  float hat  = length(vec2(local.x * 0.55, local.y - height * 0.82)) - 0.045;
-  float head = length(local - vec2(0.0, height * 0.62)) - 0.05;
-  vec2 q = abs(vec2(local.x, local.y - height * 0.28)) - vec2(0.075, height * 0.42);
+
+float figure(vec2 p, vec2 origin) {
+  p -= origin;
+  float head = length(p - vec2(0.0, 0.15)) - 0.035;
+  vec2 q = abs(p - vec2(0.0, -0.11)) - vec2(0.06, 0.22);
   float body = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);
-  return min(min(hat, head), body);
+  float hat = max(abs(p.x) - 0.09, abs(p.y - 0.205) - 0.018);
+  return min(min(head, body), hat);
 }
+
 void main() {
   vec2 uv = gl_FragCoord.xy / u_resolution.xy;
-  float paranoia = 0.75 + 0.25 * sin(u_time * 0.21);
-  float d = bayer(gl_FragCoord.xy) * 0.08 - 0.04;
+  float frozen = floor(u_time * 3.0) / 3.0;
+  float room = step(0.985, sin(uv.x * 51.0)) * 0.03 + step(0.992, sin(uv.y * 63.0)) * 0.025;
+  float peripheral = smoothstep(0.28, 0.72, length(uv - 0.5));
+  float leftGhost = smoothstep(0.025, -0.02, figure(uv, vec2(0.075, 0.48)));
+  float rightGhost = smoothstep(0.025, -0.02, figure(uv, vec2(0.94, 0.43)));
+  float recognitionError = step(0.73, hash21(vec2(floor(frozen * 0.7), 4.0)));
+  float phantom = (leftGhost + rightGhost) * peripheral * recognitionError;
+  float track = step(0.989, hash21(vec2(floor(uv.y * 53.0), frozen)));
+  float dither = bayer(gl_FragCoord.xy) * 0.035;
 
-  // sickly yellow flicker — #C8B853 over void black
-  vec3 col = vec3(0.22, 0.20, 0.10) * (0.75 + 0.25 * sin(u_time * 10.0)) + d;
-
-  // shadow people: peripheral only, vanish when centered
-  float vignette = length(uv - 0.5);
-  float peripheral = smoothstep(0.25, 0.75, vignette) * paranoia;
-  for (int i = 0; i < 4; i++) {
-    vec2 pos = vec2(
-      float(i - (i / 2) * 2) * 0.78 + 0.11,
-      -0.02 + 0.04 * sin(u_time * 0.5 + float(i))
-    );
-    pos.y += float(i / 2) * 0.02;
-    float jitter = (hash(vec2(floor(u_time * 8.0), float(i))) - 0.5) * 0.012;
-    float shadow = sdShadowMan(uv + vec2(jitter, 0.0), pos, 0.42);
-    float alpha = smoothstep(0.05, -0.05, shadow) * peripheral * (0.5 + 0.5 * sin(u_time * 0.7 + float(i) * 2.1));
-    col = mix(col, vec3(0.02, 0.02, 0.035), alpha * 0.9);
-    // red tracking reticle eyes
-    float eyes = smoothstep(0.012, 0.0, abs(shadow + 0.03)) * alpha;
-    col += vec3(0.86, 0.08, 0.24) * eyes * step(0.6, hash(vec2(float(i), floor(u_time)))) * 0.5;
-  }
-
-  // phantom smoke — half-rendered particles
-  float smoke = sin(uv.x * 50.0 + u_time) * sin(uv.y * 30.0 - u_time * 2.0);
-  smoke = smoothstep(0.8, 1.0, smoke) * 0.18 * paranoia;
-  col += vec3(0.7, 0.7, 0.6) * smoke;
-
-  // VHS tracking error
-  float scan = step(0.95, sin(uv.y * u_resolution.y * 0.5 + u_time * 5.0));
-  col += vec3(scan) * 0.06;
-  float track = step(0.992, hash(vec2(floor(uv.y * 40.0), floor(u_time * 3.0))));
-  col += vec3(0.12, 0.1, 0.04) * track;
-
-  col *= 1.0 - vignette * 0.5;
-  gl_FragColor = vec4(col, 1.0);
+  vec3 color = vec3(0.055, 0.054, 0.041) + room;
+  color += vec3(0.22, 0.21, 0.10) * dither;
+  color = mix(color, vec3(0.003, 0.004, 0.006), phantom * 0.94);
+  color += vec3(0.55, 0.04, 0.07) * track * 0.09;
+  color *= 0.97 + 0.03 * step(0.5, hash21(vec2(frozen, 2.0)));
+  color *= 1.0 - smoothstep(0.25, 0.78, length(uv - 0.5)) * 0.62;
+  gl_FragColor = vec4(color, 1.0);
 }
 `;
 
-export const SHADERS = {
-  chrysanthemum: FRAG_CHRYSANTHEMUM,
-  akashic: FRAG_AKASHIC,
-  mechanical: FRAG_MECHANICAL,
-  whitelight: FRAG_WHITELIGHT,
-  deliriant: FRAG_DELIRIANT,
-};
+const TWO_CB = HEADER + `
+void main() {
+  vec2 p = (2.0 * gl_FragCoord.xy - u_resolution.xy) / min(u_resolution.x, u_resolution.y);
+  p *= rot(0.08 * sin(u_time * 0.4));
+  float r = length(p);
+  float a = atan(p.y, p.x);
+  float petals = sin(a * 8.0 + sin(r * 8.0 - u_time * 0.8));
+  float touch = sin(p.x * 8.0 + sin(p.y * 6.0 + u_time)) * sin(p.y * 7.0 - u_time * 0.7);
+  float pulse = 0.5 + 0.5 * sin(r * 18.0 - u_time * 2.0);
+  float contour = smoothstep(0.82, 1.0, abs(touch));
+  float bloom = exp(-r * 1.15) * (0.55 + 0.45 * petals);
+  vec3 hot = vec3(1.0, 0.08, 0.52);
+  vec3 citrus = vec3(1.0, 0.38, 0.0);
+  vec3 mint = vec3(0.0, 0.92, 0.72);
+  vec3 violet = vec3(0.42, 0.14, 0.94);
+  vec3 color = vec3(0.03, 0.008, 0.05);
+  color += mix(hot, citrus, pulse) * bloom * 0.9;
+  color += mix(mint, violet, touch * 0.5 + 0.5) * contour * 0.34;
+  color += vec3(1.0, 0.85, 0.08) * pow(max(0.0, bloom), 3.0) * 0.55;
+  color *= 1.0 - smoothstep(0.5, 1.6, r) * 0.64;
+  gl_FragColor = vec4(pow(max(color, 0.0), vec3(0.88)), 1.0);
+}
+`;
 
-const ASCII_RAMP = " ·:;+*oO≡▒▓█";
+const CANON = HEADER + `
+void main() {
+  vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+  vec2 aspect = vec2(u_resolution.x / u_resolution.y, 1.0);
+  vec2 grid = uv * aspect * 9.0;
+  vec2 cell = floor(grid);
+  vec2 f = fract(grid) - 0.5;
+  float id = hash21(cell);
+  vec2 node = vec2(hash21(cell + 1.3), hash21(cell + 7.1)) - 0.5;
+  float dotNode = smoothstep(0.09, 0.0, length(f - node * 0.62));
+  float lineA = smoothstep(0.025, 0.0, abs(f.y - node.y * 0.45));
+  float lineB = smoothstep(0.018, 0.0, abs(f.x + f.y - node.x * 0.55));
+  float scan = smoothstep(0.09, 0.0, abs(fract(uv.y * 5.0 - u_time * 0.15) - 0.5));
+  vec3 color = vec3(0.004, 0.012, 0.025);
+  color += spectrum(id + u_time * 0.015) * dotNode * 0.9;
+  color += vec3(0.0, 0.78, 1.0) * lineA * 0.18;
+  color += vec3(1.0, 0.05, 0.68) * lineB * 0.13;
+  color += vec3(0.65, 1.0, 0.0) * scan * (lineA + lineB) * 0.35;
+  color *= 1.0 - length(uv - 0.5) * 0.75;
+  gl_FragColor = vec4(color, 1.0);
+}
+`;
 
-export class Wallpaper {
-  constructor(glCanvas, asciiCanvas) {
-    this.canvas = glCanvas;
-    this.asciiCanvas = asciiCanvas;
-    this.ctx2d = asciiCanvas.getContext("2d");
-    this.gl = glCanvas.getContext("webgl", { antialias: false, preserveDrawingBuffer: false });
-    this.asciiMode = false;
+export const SHADERS = { dmt: DMT, lsd: LSD, salvia: SALVIA, dxm: DXM, deliriants: DELIRIANTS, "2cb": TWO_CB, canon: CANON };
+
+export class PhenomenaField {
+  constructor(canvas, { reducedMotion = false, intensity = 2 } = {}) {
+    this.canvas = canvas;
+    this.gl = canvas.getContext("webgl", {
+      alpha: false,
+      antialias: false,
+      depth: false,
+      powerPreference: "high-performance",
+      preserveDrawingBuffer: false,
+    });
     this.programs = {};
-    this.current = null;
-    this.t0 = performance.now();
-    this._frame = 0;
-    this.bgColor = "#000";
+    this.current = "dmt";
+    this.intensity = intensity;
+    this.reducedMotion = reducedMotion;
+    this.pointer = [0.5, 0.5];
+    this.started = performance.now();
+    this.visible = !document.hidden;
+    this.needsFrame = true;
+    this.resolutionScale = 1;
+    this.slowFrames = 0;
+    this.lastFrame = performance.now();
 
-    const gl = this.gl;
-    if (!gl) {
-      // no WebGL: the OS still runs, just on a flat --bg wallpaper
-      console.error("[GHOST//OS] WebGL context could not be initialized — wallpaper disabled.");
-      glCanvas.hidden = true;
+    if (!this.gl) {
+      document.documentElement.classList.add("no-webgl");
+      canvas.hidden = true;
       return;
     }
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
 
-    for (const [name, src] of Object.entries(SHADERS)) {
-      this.programs[name] = this._compile(src, name);
+    const gl = this.gl;
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    this.buffer = buffer;
+
+    for (const [name, source] of Object.entries(SHADERS)) {
+      const compiled = this.compile(source, name);
+      if (compiled) this.programs[name] = compiled;
     }
+    if (!Object.keys(this.programs).length) {
+      document.documentElement.classList.add("no-webgl");
+      canvas.hidden = true;
+      return;
+    }
+
     this.resize();
-    window.addEventListener("resize", () => this.resize());
-    requestAnimationFrame(() => this._loop());
+    window.addEventListener("resize", () => this.resize(), { passive: true });
+    window.addEventListener("pointermove", (event) => {
+      this.pointer[0] = event.clientX / Math.max(1, innerWidth);
+      this.pointer[1] = 1 - event.clientY / Math.max(1, innerHeight);
+      this.needsFrame = true;
+    }, { passive: true });
+    document.addEventListener("visibilitychange", () => {
+      this.visible = !document.hidden;
+      this.needsFrame = true;
+    });
+    canvas.addEventListener("webglcontextlost", (event) => {
+      event.preventDefault();
+      document.documentElement.classList.add("no-webgl");
+    });
+    requestAnimationFrame((time) => this.loop(time));
   }
 
-  _compile(fragSrc, name) {
+  compile(fragmentSource, name) {
     const gl = this.gl;
-    const mk = (type, src) => {
-      const s = gl.createShader(type);
-      gl.shaderSource(s, src);
-      gl.compileShader(s);
-      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-        console.error(`[GHOST//OS] shader "${name}" failed:`, gl.getShaderInfoLog(s));
+    const makeShader = (type, source) => {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error(`[ghost field] ${name} shader failed`, gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
         return null;
       }
-      return s;
+      return shader;
     };
-    const vs = mk(gl.VERTEX_SHADER, VERT);
-    const fs = mk(gl.FRAGMENT_SHADER, fragSrc);
-    if (!vs || !fs) return null;
-    const p = gl.createProgram();
-    gl.attachShader(p, vs);
-    gl.attachShader(p, fs);
-    gl.bindAttribLocation(p, 0, "a_pos");
-    gl.linkProgram(p);
-    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
-      console.error(`[GHOST//OS] link "${name}" failed:`, gl.getProgramInfoLog(p));
+    const vertex = makeShader(gl.VERTEX_SHADER, VERTEX);
+    const fragment = makeShader(gl.FRAGMENT_SHADER, fragmentSource);
+    if (!vertex || !fragment) return null;
+    const program = gl.createProgram();
+    gl.attachShader(program, vertex);
+    gl.attachShader(program, fragment);
+    gl.linkProgram(program);
+    gl.deleteShader(vertex);
+    gl.deleteShader(fragment);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error(`[ghost field] ${name} program failed`, gl.getProgramInfoLog(program));
+      gl.deleteProgram(program);
       return null;
     }
     return {
-      prog: p,
-      u_time: gl.getUniformLocation(p, "u_time"),
-      u_resolution: gl.getUniformLocation(p, "u_resolution"),
+      program,
+      position: gl.getAttribLocation(program, "a_position"),
+      time: gl.getUniformLocation(program, "u_time"),
+      resolution: gl.getUniformLocation(program, "u_resolution"),
+      pointer: gl.getUniformLocation(program, "u_pointer"),
+      intensity: gl.getUniformLocation(program, "u_intensity"),
     };
   }
 
-  use(name) { this.current = this.programs[name] ? name : this.current; }
+  use(name) {
+    this.current = this.programs[name] ? name : (this.programs.canon ? "canon" : Object.keys(this.programs)[0]);
+    this.needsFrame = true;
+  }
 
-  setAscii(on) {
-    if (!this.gl) return;
-    this.asciiMode = on;
-    this.asciiCanvas.hidden = !on;
-    this.canvas.style.visibility = on ? "hidden" : "visible";
+  setIntensity(level) {
+    this.intensity = Math.max(0, Math.min(3, level));
+    this.resolutionScale = 1;
+    this.slowFrames = 0;
     this.resize();
   }
 
+  setReducedMotion(reduced) {
+    this.reducedMotion = reduced;
+    this.needsFrame = true;
+  }
+
   resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    if (this.asciiMode) {
-      // low-res render target = one pixel per character cell
-      this.cols = Math.min(180, Math.floor(window.innerWidth / 8));
-      this.rows = Math.min(100, Math.floor(window.innerHeight / 14));
-      this.canvas.width = this.cols;
-      this.canvas.height = this.rows;
-      this.asciiCanvas.width = window.innerWidth * dpr;
-      this.asciiCanvas.height = window.innerHeight * dpr;
-      this.asciiCanvas.style.width = window.innerWidth + "px";
-      this.asciiCanvas.style.height = window.innerHeight + "px";
-      this.ctx2d.setTransform(dpr, 0, 0, dpr, 0, 0);
-      this.pixels = new Uint8Array(this.cols * this.rows * 4);
-    } else {
-      // half-res for glow-friendly perf
-      this.canvas.width = Math.floor(window.innerWidth * dpr * 0.5);
-      this.canvas.height = Math.floor(window.innerHeight * dpr * 0.5);
+    if (!this.gl) return;
+    const base = [0.58, 0.72, 0.88, 1][this.intensity] || 0.88;
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.65);
+    const width = Math.max(1, Math.floor(innerWidth * dpr * base * this.resolutionScale));
+    const height = Math.max(1, Math.floor(innerHeight * dpr * base * this.resolutionScale));
+    if (this.canvas.width !== width || this.canvas.height !== height) {
+      this.canvas.width = width;
+      this.canvas.height = height;
+      this.gl.viewport(0, 0, width, height);
     }
-    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    this.needsFrame = true;
   }
 
-  _loop() {
+  render(time) {
     const gl = this.gl;
-    const t = (performance.now() - this.t0) / 1000;
-    const P = this.programs[this.current];
-    this._frame++;
-    if (P) {
-      gl.useProgram(P.prog);
-      gl.enableVertexAttribArray(0);
-      gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-      gl.uniform1f(P.u_time, t);
-      gl.uniform2f(P.u_resolution, this.canvas.width, this.canvas.height);
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-      if (this.asciiMode && this._frame % 2 === 0) this._drawAscii();
-    }
-    requestAnimationFrame(() => this._loop());
+    const shader = this.programs[this.current];
+    if (!gl || !shader) return;
+    gl.useProgram(shader.program);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+    gl.enableVertexAttribArray(shader.position);
+    gl.vertexAttribPointer(shader.position, 2, gl.FLOAT, false, 0, 0);
+    const seconds = this.reducedMotion ? 17.0 : (time - this.started) / 1000;
+    gl.uniform1f(shader.time, seconds);
+    gl.uniform2f(shader.resolution, this.canvas.width, this.canvas.height);
+    gl.uniform2f(shader.pointer, this.pointer[0], this.pointer[1]);
+    gl.uniform1f(shader.intensity, [0.35, 0.68, 1.0, 1.45][this.intensity] || 1.0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    this.needsFrame = false;
   }
 
-  _drawAscii() {
-    const { gl, ctx2d, cols, rows } = this;
-    gl.readPixels(0, 0, cols, rows, gl.RGBA, gl.UNSIGNED_BYTE, this.pixels);
-    const w = window.innerWidth, h = window.innerHeight;
-    const cw = w / cols, ch = h / rows;
-    ctx2d.fillStyle = this.bgColor || "#000";
-    ctx2d.fillRect(0, 0, w, h);
-    ctx2d.font = `${Math.ceil(ch)}px monospace`;
-    ctx2d.textBaseline = "top";
-    const px = this.pixels;
-    for (let y = 0; y < rows; y++) {
-      const srcY = rows - 1 - y; // GL is bottom-up
-      for (let x = 0; x < cols; x++) {
-        const i = (srcY * cols + x) * 4;
-        const r = px[i], g = px[i + 1], b = px[i + 2];
-        const lum = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
-        const ci = Math.min(ASCII_RAMP.length - 1, Math.floor(lum * ASCII_RAMP.length));
-        if (ci === 0) continue;
-        ctx2d.fillStyle = `rgb(${r},${g},${b})`;
-        ctx2d.fillText(ASCII_RAMP[ci], x * cw, y * ch);
+  loop(time) {
+    if (this.visible && (!this.reducedMotion || this.needsFrame)) {
+      this.render(time);
+      const frameCost = time - this.lastFrame;
+      if (!this.reducedMotion && frameCost > 26) this.slowFrames += 1;
+      else this.slowFrames = Math.max(0, this.slowFrames - 1);
+      if (this.slowFrames > 45 && this.resolutionScale > 0.7) {
+        this.resolutionScale *= 0.82;
+        this.slowFrames = 0;
+        this.resize();
       }
     }
+    this.lastFrame = time;
+    requestAnimationFrame((next) => this.loop(next));
   }
 }

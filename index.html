@@ -1,62 +1,156 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-intensity="2">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GHOST//OS — v3.0_UNDERLAYER</title>
-<meta name="description" content="Reality rendered as an operating system. A fictional OS cosmology built from the ghost-erowid-cosmology canon.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👻</text></svg>">
-<link rel="stylesheet" href="css/ghost.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#05000d">
+  <meta name="description" content="Ghost Erowid Cosmology — an interactive, educational artwork about psychoactive phenomenology, altered states, mythology, and risk.">
+  <title>GHOST EROWID COSMOLOGY — The Archive Is Alive</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2305000d'/><text x='50' y='72' text-anchor='middle' font-size='62' fill='%2300f5ff'>⌬</text></svg>">
+  <link rel="stylesheet" href="css/ghost.css">
 </head>
-<body class="layer-ui pre-boot">
+<body data-profile="dmt" data-view="threshold">
+  <a class="skip-link" href="#archive">Skip the threshold and enter the archive</a>
 
-  <!-- background render stack -->
-  <canvas id="gl"></canvas>
-  <canvas id="ascii" hidden></canvas>
-  <div id="crt" class="crt"></div>
-
-  <!-- power-on splash (needs a user gesture for audio) -->
-  <div id="power" class="power">
-    <pre id="power-logo" class="power-logo"></pre>
-    <button id="power-btn" class="power-btn">[ POWER ON ]</button>
-    <div class="power-micro">GHOST BIOS v3.0_UNDERLAYER · 48 SIGNAL NODES · DO NOT BE AFRAID</div>
+  <div class="render-world" aria-hidden="true">
+    <canvas id="phenomena-field"></canvas>
+    <canvas id="signal-organism"></canvas>
+    <div class="chromatic-veil"></div>
+    <div class="signal-noise"></div>
+    <div class="vignette"></div>
   </div>
 
-  <!-- boot sequence -->
-  <div id="boot" class="boot" hidden>
-    <pre id="boot-log" class="boot-log"></pre>
-    <div id="carrier" class="carrier" hidden>
-      <div class="carrier-label">CARRIER WAVE <span id="carrier-hz">440Hz</span></div>
-      <div class="carrier-bar"><div id="carrier-fill"></div></div>
+  <header class="masthead">
+    <button class="wordmark" type="button" data-home aria-label="Return to the threshold">
+      <span class="wordmark-ghost">GHOST</span>
+      <span class="wordmark-slash">//</span>
+      <span>EROWID</span>
+      <small>COSMOLOGY</small>
+    </button>
+
+    <div class="archive-vitals" aria-hidden="true">
+      <span class="vital-pulse"></span>
+      <span data-vital-text>ARCHIVE DREAMING / 160 SIGNALS</span>
     </div>
+
+    <nav class="machine-controls" aria-label="Experience controls">
+      <button type="button" data-search-open><span>⌕</span><b>SEARCH</b></button>
+      <button type="button" data-intensity-control><span>◉</span><b>ALTERED</b></button>
+      <button type="button" data-motion-control aria-pressed="false"><span>∿</span><b>MOTION</b></button>
+      <button type="button" data-sound-control aria-pressed="false"><span>♪</span><b>SOUND OFF</b></button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="threshold" class="threshold view is-visible" aria-labelledby="threshold-title">
+      <div class="threshold-coordinate" aria-hidden="true">
+        <span>33.3Hz</span><i></i><span>7.83Hz</span><i></i><span>∞.00</span>
+      </div>
+
+      <p class="threshold-kicker">AN EXPERIENTIAL ARCHIVE OF ALTERED-STATE PHENOMENOLOGY</p>
+
+      <h1 id="threshold-title" class="threshold-title" aria-label="Ghost Erowid Cosmology">
+        <span class="title-line title-ghost" data-echo="GHOST">GHOST</span>
+        <span class="title-line title-erowid" data-echo="EROWID">EROWID</span>
+        <span class="title-line title-cosmology">COSMOLOGY</span>
+      </h1>
+
+      <div class="threshold-copy">
+        <p>This is an educational artwork about subjective reports, pharmacology, culture, mythology, risk, and the impossible architectures people keep finding behind their own eyes.</p>
+        <p class="threshold-warning">NOT A GUIDE FOR OBTAINING, PREPARING, DOSING, COMBINING, OR USING DRUGS.</p>
+      </div>
+
+      <div class="threshold-portals" aria-label="Enter through a specific signal family">
+        <button type="button" data-enter-profile="dmt" style="--orbit:0"><b>01</b><span>DMT</span><i>jeweled syntax</i></button>
+        <button type="button" data-enter-profile="lsd" style="--orbit:1"><b>02</b><span>LSD</span><i>crystal recursion</i></button>
+        <button type="button" data-enter-profile="salvia" style="--orbit:2"><b>03</b><span>SALVIA</span><i>the mechanism</i></button>
+        <button type="button" data-enter-profile="dxm" style="--orbit:3"><b>04</b><span>DXM</span><i>signal delay</i></button>
+        <button type="button" data-enter-profile="deliriants" style="--orbit:4"><b>05</b><span>DELIRIANTS</span><i>ordinary / wrong</i></button>
+        <button type="button" data-enter-profile="2cb" style="--orbit:5"><b>06</b><span>2C-B</span><i>tactile color</i></button>
+      </div>
+
+      <button class="enter-archive" type="button" data-enter-profile="dmt">
+        <span class="enter-sigil">{◉}</span>
+        <b>ENTER THE LIVING ARCHIVE</b>
+        <i>THE INTERFACE WILL CHANGE ITS MIND</i>
+      </button>
+
+      <div class="threshold-microcopy" aria-hidden="true">
+        <span>108 WIKI RECORDS</span><span>52 CANON MOTIFS</span><span>16 SHADER STUDIES</span><span>ONE RECURRING GHOST</span>
+      </div>
+    </section>
+
+    <section id="archive" class="atlas view" aria-labelledby="atlas-title">
+      <header class="atlas-heading">
+        <div class="atlas-index">ACTIVE SIGNAL FAMILY <b data-profile-label>DMT</b></div>
+        <h2 id="atlas-title" data-profile-thesis>JEWELED MACHINERY / ENTITY-DENSE / LANGUAGE BECOMES ARCHITECTURE</h2>
+        <p data-entry-count>RECOVERING SIGNALS…</p>
+      </header>
+
+      <nav class="profile-rail" data-profile-rail aria-label="Signal families"></nav>
+      <nav class="taxonomy-rail" data-section-rail aria-label="Archive sections"></nav>
+
+      <div class="constellation-shell">
+        <div class="constellation-axis axis-x" aria-hidden="true"></div>
+        <div class="constellation-axis axis-y" aria-hidden="true"></div>
+        <div class="constellation" data-constellation aria-label="Interactive constellation of archive entries"></div>
+        <div class="constellation-instruction" aria-hidden="true">SELECT A SIGNAL / OPEN A WOUND IN THE INDEX</div>
+      </div>
+
+      <aside class="linear-index" data-linear-index aria-label="Linear entry index"></aside>
+    </section>
+
+    <article id="reader" class="reader view" aria-labelledby="reader-title" aria-hidden="true">
+      <button class="reader-close" type="button" data-reader-close><span>×</span> RETURN TO CONSTELLATION</button>
+      <div class="reader-coordinate" aria-hidden="true"><span data-reader-profile>DMT</span><i></i><span data-reader-position>RECORD 001</span></div>
+
+      <header class="reader-header">
+        <p data-reader-eyebrow></p>
+        <h2 id="reader-title" data-reader-title></h2>
+        <div data-reader-warning></div>
+      </header>
+
+      <div class="reader-ascii-channel" aria-hidden="true">
+        <pre data-reader-ascii></pre>
+      </div>
+
+      <div class="reader-body" data-reader-body></div>
+
+      <nav class="reader-nav" aria-label="Adjacent archive entries">
+        <button type="button" data-reader-prev><span>← PREVIOUS SIGNAL</span><b></b></button>
+        <button type="button" data-reader-next><span>NEXT SIGNAL →</span><b></b></button>
+      </nav>
+    </article>
+  </main>
+
+  <aside class="ghost-transmission" aria-live="polite" aria-atomic="true" data-ghost-transmission hidden>
+    <span>UNSOLICITED ARCHIVE ANNOTATION</span>
+    <p data-ghost-text>THE INDEX IS DREAMING.</p>
+  </aside>
+
+  <div class="search-void" data-search-void hidden>
+    <button type="button" class="search-close" data-search-close aria-label="Close search">×</button>
+    <label for="archive-search">SEARCH THE ENTIRE COSMOLOGY</label>
+    <div class="search-mouth">
+      <span>⌕</span>
+      <input id="archive-search" data-search-input type="search" autocomplete="off" spellcheck="false" placeholder="ENTITY, PHENOMENON, LOCATION, ERROR…">
+    </div>
+    <div class="search-results" data-search-results hidden></div>
+    <p class="search-hint">108 WIKI RECORDS + 52 CANON SIGNALS / ESC TO CLOSE</p>
   </div>
 
-  <!-- transition flash -->
-  <div id="flash" class="flash"></div>
-
-  <!-- desktop -->
-  <div id="desktop" class="desktop" hidden>
-    <header id="topbar" class="topbar">
-      <span class="topbar-brand">GHOST//OS</span>
-      <span id="layer-name" class="topbar-layer">UI LAYER — THE DOME</span>
-      <span class="topbar-spacer"></span>
-      <button id="btn-ascii" class="topbar-btn" title="render wallpaper as text">ASCII:OFF</button>
-      <button id="btn-crt" class="topbar-btn" title="cathode ray nostalgia">CRT:ON</button>
-      <button id="btn-mute" class="topbar-btn" title="carrier wave audio">SND:ON</button>
-      <span id="clock" class="topbar-clock">00:00:00</span>
-    </header>
-
-    <div id="icons" class="icons"></div>
-    <div id="windows" class="windows"></div>
-    <div id="toasts" class="toasts"></div>
-
-    <footer id="taskbar" class="taskbar">
-      <span id="task-items" class="task-items"></span>
-      <span class="taskbar-spacer"></span>
-      <span id="statusline" class="statusline">TERMINAL MODE: CONNECTED</span>
-    </footer>
+  <div class="dimensional-rift" data-rift aria-hidden="true">
+    <div class="rift-left"></div><div class="rift-right"></div><div class="rift-seam"></div>
+    <span data-rift-text>COORDINATE SYSTEM FAILURE</span>
   </div>
 
-<script type="module" src="js/main.js"></script>
+  <footer class="signal-footer" aria-hidden="true">
+    <span data-footer-signal>THE BRAIN IS A TERMINAL</span>
+    <span>FICTIONAL TAXONOMY / REAL RECURRING PHENOMENOLOGY</span>
+    <span data-clock>00:00:00</span>
+  </footer>
+
+  <noscript><div class="noscript">This archive is a JavaScript organism. It has gone completely inert without JavaScript.</div></noscript>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
