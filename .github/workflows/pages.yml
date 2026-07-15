@@ -1,8 +1,8 @@
-name: Deploy GHOST//OS to GitHub Pages
+name: Deploy Ghost Erowid Cosmology to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, claude/ghost-erowid-cosmology-app-s2hbg1]
   workflow_dispatch:
 
 permissions:
